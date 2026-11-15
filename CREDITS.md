@@ -27,6 +27,18 @@ In ForgeOpus/ModelForge, commits made with Claude Code carry a `Co-Authored-By: 
 - Launch validation and recovery.
 - Frontend packaging.
 
+### GitHub Copilot
+
+[GitHub Copilot](https://github.com/features/copilot) was used through its coding agent, which opened pull requests from `copilot/*` branches, and through Copilot Autofix. Its work included:
+
+- Wiring up the redesigned React application ([#11](https://github.com/RETR0-OS/ModelForgeRedesign/pull/11)).
+- CI for the Python tests and the frontend ([#8](https://github.com/RETR0-OS/ModelForgeRedesign/pull/8)).
+- Packaging the built frontend into the Python distribution ([#12](https://github.com/RETR0-OS/ModelForgeRedesign/pull/12)).
+- Fixing the training ETA timestamps and stopping the Playground from overwriting state ([#9](https://github.com/RETR0-OS/ModelForgeRedesign/pull/9)).
+- Autofix suggestions, such as the TensorBoard configuration fix.
+
+Commits from the coding agent carry a `Co-authored-by: copilot-swe-agent[bot]` trailer.
+
 ## Open-source projects
 
 ModelForge is built on [PyTorch](https://pytorch.org), [Hugging Face Transformers](https://github.com/huggingface/transformers), [TRL](https://github.com/huggingface/trl), [PEFT](https://github.com/huggingface/peft), [Accelerate](https://github.com/huggingface/accelerate), [bitsandbytes](https://github.com/bitsandbytes-foundation/bitsandbytes), [FastAPI](https://fastapi.tiangolo.com), [React](https://react.dev) and [Vite](https://vite.dev). See `pyproject.toml` and `web/frontend/package.json` for the full list of dependencies.

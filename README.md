@@ -2,7 +2,7 @@
 
 Hardware-aware fine-tuning utility with browser, terminal, and notebook interfaces.
 
-Built with help from AI coding tools (Claude Code and Codex). See [CREDITS.md](CREDITS.md).
+Built with help from AI coding tools (Claude Code, Codex and GitHub Copilot). See [CREDITS.md](CREDITS.md).
 
 ## Browser UI
 
