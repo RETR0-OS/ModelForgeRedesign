@@ -1,13 +1,82 @@
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {cleanup, fireEvent, screen, waitFor} from '@testing-library/react';
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-beforeEach(()=>{
-  document.body.innerHTML='<div id="root"></div>'; localStorage.clear();
-  Object.defineProperty(window,'matchMedia',{writable:true,value:()=>({matches:false,addEventListener(){},removeEventListener(){}})});
-  vi.stubGlobal('fetch',vi.fn(async (input:RequestInfo|URL)=>{const url=String(input);const data=url.endsWith('/runs')?{runs:[]}:url.endsWith('/hardware')?{gpus:[],ram_gb:16,available_disk_storage_gb:50}:url.endsWith('/system')?{use_cases:[],providers:[],name:'ModelForge',version:'4.0'}:{};return {ok:true,json:async()=>data}}));
+import { AppProviders, AppRoutes } from "@/App";
+import { api, captureStartupToken } from "@/lib/api";
+
+function json(body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+beforeEach(() => {
+  localStorage.clear();
+  window.history.replaceState({}, "", "/app?token=startup-secret&stay=1");
+  captureStartupToken();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: RequestInfo | URL) => {
+      const path = String(input);
+      if (path.includes("/api/system")) {
+        return json({
+          name: "ModelForge",
+          package: "modelforge-finetuning",
+          version: "4.0.0",
+          providers: [],
+          strategies: [],
+          use_cases: [],
+        });
+      }
+      if (path.includes("/api/hardware")) {
+        return json({
+          physical_core_count: 4,
+          disk_storage_gb: 20,
+          available_disk_storage_gb: 10,
+          ram_gb: 16,
+          gpus: [],
+        });
+      }
+      if (path.includes("/api/runs")) return json({ runs: [] });
+      if (path.includes("/api/models")) return json({ models: [] });
+      if (path.includes("/api/playground/status")) {
+        return json({ available: true, reason: null, session_id: null });
+      }
+      return json({});
+    }),
+  );
 });
-afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals();vi.resetModules()});
-describe('workbench routes',()=>{
-  it('renders the current playground and both inference modes',async()=>{history.replaceState(null,'','/app/playground');await import('../src/main');expect(await screen.findByRole('heading',{name:'Playground'})).toBeTruthy();fireEvent.click(screen.getByRole('button',{name:'Streaming'}));expect(screen.getByRole('button',{name:'Open streaming session'})).toBeTruthy();expect(screen.getByText(/Sessions are unavailable during training/)).toBeTruthy()});
-  it('retains the API token after capturing it from the startup URL',async()=>{history.replaceState(null,'','/app/settings?token=secret');await import('../src/main');await waitFor(()=>expect(localStorage.getItem('modelforge_token')).toBe('secret'));expect(location.search).toBe('');expect(await screen.findByRole('heading',{name:'Settings'})).toBeTruthy()});
+
+describe("redesigned workbench routes", () => {
+  it("renders the current session-based playground", async () => {
+    render(
+      <MemoryRouter initialEntries={["/app/playground"]}>
+        <AppProviders>
+          <AppRoutes />
+        </AppProviders>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("heading", { name: "Playground" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Nothing to talk to yet" })).toBeTruthy();
+  });
+
+  it("retains the startup token when rendering a workbench route", async () => {
+    render(
+      <MemoryRouter initialEntries={["/app/docs"]}>
+        <AppProviders>
+          <AppRoutes />
+        </AppProviders>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("heading", { name: "Documentation" })).toBeTruthy();
+    expect(window.location.search).toBe("?stay=1");
+    const fetchMock = vi.mocked(fetch);
+    await api.health();
+    const healthCall = fetchMock.mock.calls.find((call) => String(call[0]).includes("/api/health"));
+    const headers = (healthCall?.[1] as RequestInit).headers as Record<string, string>;
+    expect(headers["X-ModelForge-Token"]).toBe("startup-secret");
+  });
 });

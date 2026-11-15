@@ -1,10 +1,4 @@
-export interface TrainingEvent {
-  run_id: number;
-  type: string;
-  message?: string;
-  ts?: number;
-  payload?: {step?: number; max_steps?: number; path?: string; error?: string; logs?: {loss?: number; grad_norm?: number; learning_rate?: number; mean_token_accuracy?: number; epoch?: number}};
-}
+import type { TrainingEvent } from "@/types";
 
 export interface MetricPoint {
   step: number;

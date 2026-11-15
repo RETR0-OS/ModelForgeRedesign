@@ -20,6 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PUBLIC_ASSETS = (
     "favicon.svg",
     "favicon.ico",
+    "favicon.jpg",
     "logo.svg",
     "Logo.jpg",
     "apple-touch-icon.png",

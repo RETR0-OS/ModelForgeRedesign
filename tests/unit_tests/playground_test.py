@@ -272,7 +272,6 @@ def test_automatic_disk_placement(tiny_model, tmp_path, monkeypatch):
     assert not list(tmp_path.glob("modelforge-offload-*"))
 
 
-
 def test_adapter_loading_ignores_stale_full_model_in_checkpoint(tiny_model, tmp_path, monkeypatch, caplog):
     from peft import LoraConfig, TaskType, get_peft_model
     from transformers import AutoModelForCausalLM, GPT2Config, GPT2LMHeadModel
@@ -296,6 +295,7 @@ def test_adapter_loading_ignores_stale_full_model_in_checkpoint(tiny_model, tmp_
     assert sources == [str(tiny_model)]
     assert 'MISMATCH' not in caplog.text
     assert (path / 'model.safetensors').exists()  # never repair artifacts by deleting them
+
 class _LiveThread:
     def is_alive(self):
         return True
@@ -363,10 +363,6 @@ def test_playground_routes_use_distinct_services(tmp_path, monkeypatch):
     assert status.json()["session_id"] == session_id
     assert status.json()["model_path"] == str(tmp_path)
 
-    closed = client.delete(f"/api/playground/sessions/{session_id}", headers=headers)
-    assert closed.status_code == 200
-    assert closed.json() == {"closed": True}
-
     inferred = client.post(
         "/api/playground/infer",
         headers=headers,
@@ -375,6 +371,9 @@ def test_playground_routes_use_distinct_services(tmp_path, monkeypatch):
     assert inferred.status_code == 404
     assert inferred.json()["detail"] == "Run not found."
 
+    closed = client.delete(f"/api/playground/sessions/{session_id}", headers=headers)
+    assert closed.status_code == 200
+    assert closed.json() == {"closed": True}
     again = client.delete(f"/api/playground/sessions/{session_id}", headers=headers)
     assert again.json() == {"closed": False}
     assert client.get("/api/playground/status", headers=headers).json()["session_id"] is None

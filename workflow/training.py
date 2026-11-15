@@ -38,6 +38,28 @@ def _get(config: Any, key: str, default: Any = None) -> Any:
     return getattr(config, key, default)
 
 
+def _as_dict(config: Any) -> dict:
+    """Normalise a config that may be a pydantic model or a plain dict.
+
+    A Recommendation built in-process carries typed config objects, but one
+    that has round-tripped through the web API is rebuilt from JSON into
+    dicts, because Recommendation types both config fields as Any. Both reach
+    this module, so both have to work."""
+    if config is None:
+        return {}
+    if hasattr(config, "model_dump"):
+        return config.model_dump()
+    return dict(config)
+
+
+def _get(config: Any, key: str, default: Any = None) -> Any:
+    if config is None:
+        return default
+    if isinstance(config, dict):
+        return config.get(key, default)
+    return getattr(config, key, default)
+
+
 _TASK_SLUG_TO_PEFT_TASK_TYPE = {
     "causal_language_modeling": "CAUSAL_LM",
     "seq2seq_modeling": "SEQ_2_SEQ_LM",

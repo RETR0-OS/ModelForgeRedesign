@@ -137,7 +137,15 @@ def create_app(
     async def list_runs(limit: int = 100):
         return {"runs": [_with_tensorboard_url(run) for run in ledger.list_runs(limit=limit)]}
 
-    @app.post("/api/playground/infer", dependencies=[require_auth])
+    @app.post(
+        "/api/playground/infer",
+        dependencies=[require_auth],
+        summary="One-shot inference (compatibility)",
+        description=(
+            "Compatibility layer for clients that have not migrated to the "
+            "session-based playground. Does not share state with session chat."
+        ),
+    )
     def playground_infer(request: InferenceRequest):
         try:
             return app.state.inference_playground.infer(request)
@@ -274,13 +282,14 @@ def create_app(
         }
 
     # ------------------------------------------------------------------
-    # Playground
+    # Playground (canonical session manager)
     # ------------------------------------------------------------------
 
     @app.get("/api/playground/status", dependencies=[require_auth])
     async def playground_status():
-        available, reason = app.state.session_manager.availability()
-        current = app.state.session_manager.current
+        manager = app.state.session_manager
+        available, reason = manager.availability()
+        current = manager.current
         return {
             "available": available,
             "reason": reason,
