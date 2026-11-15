@@ -2,6 +2,8 @@
 
 Hardware-aware fine-tuning utility with browser, terminal, and notebook interfaces.
 
+Built with help from AI coding tools (Claude Code and Codex). See [CREDITS.md](CREDITS.md).
+
 ## Browser UI
 
 `modelforge run` serves the UI from `web/frontend_dist/`. That directory is not committed. Source checkouts and wheel builds create it with the locked frontend build:
